@@ -1,66 +1,45 @@
-'use strict'
+var express = require('express')
+var alexa = require('alexa-app')
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const alexa = require('alexa-app')
-const wol = require('wake_on_lan')
+var PORT = process.env.port || 8080
+var app = express()
 
-const config = require('./config')
+// ALWAYS setup the alexa app and attach it to express before anything else.
+var alexaApp = new alexa.app('wol')
 
-// express config
-const app = express()
-app.set('port', (process.env.PORT || config.PORT || 3001))
-app.use(express.static('public'))
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(bodyParser.json())
-app.set('view engine', 'ejs')
-
-// alexa app config
-const alexaApp = new alexa.app('wake-on-lan')
 alexaApp.express({
   expressApp: app,
+
+  // verifies requests come from amazon alexa. Must be enabled for production.
+  // You can disable this if you're running a dev environment and want to POST
+  // things to test behavior. enabled by default.
   checkCert: false,
-  endpoint: 'wol',
+
+  // sets up a GET route when set to true. This is handy for testing in
+  // development, but not recommended for production. disabled by default
   debug: true
 })
 
-alexaApp.launch((request, response) => {
-  console.log(`App Launched`)
+// now POST calls to /test in express will be handled by the app.request() function
 
-  response.say(`Tell me the device you want to switch on.`)
+// from here on you can setup any other express routes or middlewares as normal
+app.set('view engine', 'ejs')
 
-  response.shouldEndSession(false, 'I said tell me the device you want to switch on.')
-
-  response.send()
+alexaApp.launch(function (request, response) {
+  response.say('You launched the app!')
 })
 
-alexaApp.intent('WakeUp', {
-  slots: {
-    TOPIC: 'COMPUTER'
-  },
-  utterances: ['switch on {TOPIC}', 'wake up {TOPIC}', 'turn on {TOPIC}']
-}, (request, response) => {
-  const topic = request.slot('TOPIC')
-  console.log(topic)
-  wol.wake('D8:CB:8A:A3:03:A4', function (error) {
-    if (error) {
-      response.say('There was an error. Please check my logs.')
-      console.log(error)
-    } else {
-      response.say(`${topic} woken up.`)
-      console.log('awake')
-      response.send()
-    }
-  })
+alexaApp.dictionary = { 'names': ['matt', 'joe', 'bob', 'bill', 'mary', 'jane', 'dawn'] }
+
+alexaApp.intent('nameIntent', {
+  'slots': { 'NAME': 'LITERAL' },
+  'utterances': [
+    "my {name is|name's} {names|NAME}", 'set my name to {names|NAME}'
+  ]
+},
+function (request, response) {
+  response.say('Success!')
 })
 
-app.get('/schema', function (request, response) {
-  response.send(`<pre>${alexaApp.schema()}</pre>`)
-})
-
-app.get('/utterances', function (request, response) {
-  response.send(`<pre>${alexaApp.utterances()}</pre>`)
-})
-
-// launch server
-app.listen(app.get('port'), () => console.log(`Alexa Node App wake-on-lan running at localhost ${app.get('port')}`))
+app.listen(PORT)
+console.log('Listening on port ' + PORT + ', try http://localhost:' + PORT + '/test')
