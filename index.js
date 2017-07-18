@@ -39,6 +39,7 @@ alexaApp.intent('wakeUp', {
       response.say(`I woke up ${name}`)
       console.log('awake')
     }
+    response.send()
   })
 })
 
