@@ -20,7 +20,7 @@ const alexaApp = new alexa.app('wake-on-lan')
 alexaApp.express({
   expressApp: app,
   checkCert: false,
-  endpoint: '/',
+  endpoint: 'wol',
   debug: true
 })
 
