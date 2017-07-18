@@ -1,45 +1,46 @@
-var express = require('express')
-var alexa = require('alexa-app')
+'use strict'
 
-var PORT = process.env.port || 8080
-var app = express()
+const express = require('express')
+const alexa = require('alexa-app')
 
-// ALWAYS setup the alexa app and attach it to express before anything else.
-var alexaApp = new alexa.app('wol')
+const PORT = process.env.port || 8080
+const app = express()
+
+const alexaApp = new alexa.app('wol')
+const wol = require('wake_on_lan')
 
 alexaApp.express({
   expressApp: app,
-
-  // verifies requests come from amazon alexa. Must be enabled for production.
-  // You can disable this if you're running a dev environment and want to POST
-  // things to test behavior. enabled by default.
   checkCert: false,
-
-  // sets up a GET route when set to true. This is handy for testing in
-  // development, but not recommended for production. disabled by default
   debug: true
 })
 
-// now POST calls to /test in express will be handled by the app.request() function
-
-// from here on you can setup any other express routes or middlewares as normal
 app.set('view engine', 'ejs')
 
-alexaApp.launch(function (request, response) {
-  response.say('You launched the app!')
+alexaApp.launch((request, response) => {
+  console.log('app launched')
+  response.say('Who do you want me to wake up?')
 })
 
-alexaApp.dictionary = { 'names': ['matt', 'joe', 'bob', 'bill', 'mary', 'jane', 'dawn'] }
-
-alexaApp.intent('nameIntent', {
+alexaApp.intent('wakeUp', {
   'slots': { 'NAME': 'NAME' },
   'utterances': [
-    "my {name is|name's} {NAME}", 'set my name to {NAME}'
+    'wake up {NAME}',
+    'switch on {NAME}',
+    'turn on {NAME}'
   ]
-},
-function (request, response) {
-  response.say('Success!')
+}, (request, response) => {
+  const name = request.slot('NAME')
+  wol.wake('D8:CB:8A:A3:03:A4', function (error) {
+    if (error) {
+      response.say(`There was an error. I could not wake up ${name}`)
+      console.log(error)
+    } else {
+      response.say(`I woke up ${name}`)
+      console.log('awake')
+    }
+  })
 })
 
 app.listen(PORT)
-console.log('Listening on port ' + PORT + ', try http://localhost:' + PORT + '/test')
+console.log(`Listening on port ${PORT}`)
