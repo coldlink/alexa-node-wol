@@ -1,0 +1,23 @@
+{
+  "name": "alexa-wol",
+  "version": "0.0.1",
+  "description": "alexa skill for wake on lan",
+  "main": "index.js",
+  "author": "Mahesh Makani",
+  "license": "MIT",
+  "dependencies": {
+    "alexa-app": "^4.0.1",
+    "body-parser": "^1.17.2",
+    "ejs": "^2.5.6",
+    "express": "^4.15.3",
+    "wake_on_lan": "^0.0.4"
+  },
+  "devDependencies": {
+    "eslint": "^4.2.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1"
+  }
+}
