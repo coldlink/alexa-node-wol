@@ -44,9 +44,9 @@ alexaApp.launch((request, response) => {
 alexaApp.intent('wakeUp', {
   'slots': { 'NAME': 'NAME' },
   'utterances': [
-    'wake up {NAME}',
-    'switch on {NAME}',
-    'turn on {NAME}'
+    'wake up {the |} {NAME}',
+    'switch on {the |} {NAME}',
+    'turn on {the |} {NAME}'
   ]
 }, (request, response) => {
   const name = request.slot('NAME')
