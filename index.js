@@ -18,7 +18,7 @@ const getMac = name => {
 
 const wakeUpDevice = mac => new Promise((resolve, reject) => {
   if (!mac) {
-    return reject(new Error(404))
+    return reject(404)
   }
   wol.wake(mac, (err) => {
     if (err) {
