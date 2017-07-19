@@ -2,12 +2,31 @@
 
 const express = require('express')
 const alexa = require('alexa-app')
+const wol = require('wake_on_lan')
 
-const PORT = process.env.port || 8080
+const config = require('./config')
+
+const PORT = process.env.PORT || config.PORT || 8080
 const app = express()
 
 const alexaApp = new alexa.app('wol')
-const wol = require('wake_on_lan')
+
+const getMac = name => {
+  const device = config.devices.find(dev => dev.name.findIndex(_name => _name.toLowerCase() === name.toLowerCase()) !== -1)
+  return device ? device.mac : null
+}
+
+const wakeUpDevice = mac => new Promise((resolve, reject) => {
+  if (!mac) {
+    return reject(new Error(404))
+  }
+  wol.wake(mac, (err) => {
+    if (err) {
+      return reject(err)
+    }
+    return resolve()
+  })
+})
 
 alexaApp.express({
   expressApp: app,
@@ -31,16 +50,18 @@ alexaApp.intent('wakeUp', {
   ]
 }, (request, response) => {
   const name = request.slot('NAME')
-  wol.wake('D8:CB:8A:A3:03:A4', function (error) {
-    if (error) {
-      response.say(`There was an error. I could not wake up ${name}`)
-      console.log(error)
-    } else {
-      response.say(`I woke up ${name}`)
-      console.log('awake')
-    }
-    response.send()
-  })
+
+  return wakeUpDevice(getMac(name))
+    .then(() => {
+      return response.say(`I've woken up ${name}.`)
+    })
+    .catch(err => {
+      if (err === 404) {
+        return response.say(`I could not find ${name}`)
+      }
+      console.log(err)
+      return response.say('There was an error, check the logs for more details.')
+    })
 })
 
 app.listen(PORT)
