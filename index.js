@@ -50,6 +50,7 @@ alexaApp.intent('wakeUp', {
   ]
 }, (request, response) => {
   const name = request.slot('NAME')
+  console.log(name)
 
   return wakeUpDevice(getMac(name))
     .then(() => {
